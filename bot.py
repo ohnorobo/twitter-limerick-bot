@@ -77,7 +77,6 @@ class MeterReader():
 
     try:
       num = self.num_sylls(text)
-      print(num)
     except KeyError:
       return False
 
@@ -102,7 +101,10 @@ class MeterReader():
   def matchlong(self, text, num_sylls):
 
     stresses = self.stresses(text)
-    single_syll_words = self.single_syll_words(text)
+    single_sylls = self.single_syll_words(text)
+
+    #pprint(stresses)
+    #pprint(single_syll_words)
 
     # possible options
     #  ./../../   8
@@ -110,16 +112,13 @@ class MeterReader():
     # ../../../   9
     # ../../../.  10
 
-    if num_sylls == 8:
-      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0])
-    else if num_sylls == 9:
-      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or
-             self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0])
-    else if num_sylls == 10:
-      return self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
-
-    #pprint(stresses)
-    #pprint(single_syll_words)
+    if (num_sylls == 8):
+      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0])
+    elif (num_sylls == 9):
+      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or \
+             self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0])
+    elif (num_sylls == 10):
+      return self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
 
   # match the pattern 
   # + ˘ / ˘ ˘ / +
@@ -128,7 +127,10 @@ class MeterReader():
   def matchshort(self, text, num_sylls):
 
     stresses = self.stresses(text)
-    single_syll_words = self.single_syll_words(text)
+    single_sylls = self.single_syll_words(text)
+
+    #pprint(stresses)
+    #pprint(single_syll_words)
 
     # possible options
     #  ./../   5
@@ -136,17 +138,13 @@ class MeterReader():
     # ../../   6
     # ../../.  7
 
-    if num_sylls == 5:
-      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0])
-    else if num_sylls == 6:
-      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or
-             self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0])
-    else if num_sylls == 7:
-      return self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
-
-    #pprint(stresses)
-    #pprint(single_syll_words)
-
+    if (num_sylls == 5):
+      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0])
+    elif (num_sylls == 6):
+      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or \
+             self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0])
+    elif (num_sylls == 7):
+      return self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
 
   #the stress corrosponding th each syllable
   def stresses(self, text):
@@ -157,12 +155,34 @@ class MeterReader():
     return flatten(map(self.dic.single_syll, text))
 
 
-  def match_pattern(self, stresses, single_sylls, pattern):
+  def match_pattern(self, text, stresses, single_sylls, pattern):
     # stresses is a list of 0-1-2s
     # single sylls is a list of true-falses
     # patterns is a list of 0-1s
+    # all lists must be the same length
 
+    for tex, stress, single_syll, patt in zip(text, stresses, single_sylls, pattern):
+      if stress == patt:
+        pass
+      elif stress == 2: # secondary stress can be either off or on
+        pass
+      elif single_syll == True:
+        # TODO this is probably to permissive a condition
+        # figure out something more restrained
+        # maybe don't allow stress on single-syll stop words
+        # http://xpo6.com/list-of-english-stop-words/
+        pass
 
+      else:
+        return False
+
+    print(pattern)
+    return True
+
+STOPWORDS = ["a", "the", "for", "am", "an", "are", "as", "at", "be", "but",
+             "he", "her", "i", "if", "in", "is", "it", "it's", "my", "of", "on",
+             "or", "and", "our", "his", "her", "out", "so", "such", "than", "these",
+             "this", "that", "those", "to", "too"]
 
 
 class CMUDict():
@@ -178,8 +198,6 @@ class CMUDict():
       d[word]=(self.parse_stresses(sylls),
                self.parse_rhyme(sylls),
                self.parse_num_sylls(sylls))
-
-      #pprint((line, d))
     self.dic = d
 
   # returns the number of sylls in a word

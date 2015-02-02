@@ -113,12 +113,12 @@ class MeterReader():
     # ../../../.  10
 
     if (num_sylls == 8):
-      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0])
+      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0,1,1,0])
     elif (num_sylls == 9):
-      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or \
-             self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0])
+      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0,1,1,0,1]) or \
+             self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0,1,1,0])
     elif (num_sylls == 10):
-      return self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
+      return self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0,1,1,0,1])
 
   # match the pattern 
   # + ˘ / ˘ ˘ / +
@@ -139,12 +139,12 @@ class MeterReader():
     # ../../.  7
 
     if (num_sylls == 5):
-      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0])
+      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0])
     elif (num_sylls == 6):
-      return self.match_pattern(text, stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or \
-             self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0])
+      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0,1]) or \
+             self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0])
     elif (num_sylls == 7):
-      return self.match_pattern(text, stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
+      return self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0,1])
 
   #the stress corrosponding th each syllable
   def stresses(self, text):
@@ -171,7 +171,16 @@ class MeterReader():
         # figure out something more restrained
         # maybe don't allow stress on single-syll stop words
         # http://xpo6.com/list-of-english-stop-words/
-        pass
+        if tex.lower() in STOPWORDS:
+          if patt == 1:
+            pass
+          else:
+            return False
+        else:
+          if patt == 0:
+            pass
+          else:
+            return False
 
       else:
         return False

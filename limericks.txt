@@ -6,6 +6,11 @@ You're in the wrong hole;
 There's plenty of room in the right one."
 
 9/9/6/5/9
+./../../.
+./../../.
+../../
+./../
+./../../.
 
 
 
@@ -16,6 +21,11 @@ That you have just made
 A Chilean chinchilla's chin chilly
 
 10/9/6/5/10
+../../../.
+./../../.
+../../
+./../
+../../../.
 
 
 A dying mosquito exclaimed,
@@ -25,6 +35,11 @@ Was para-dichloro-
 Diphenyl-trichloroethane
 
 8/8/6/6/8
+./../../
+./../../
+./../.
+./../.
+./../../
 
 
 A UNIX sales lady, Lenore,
@@ -34,6 +49,11 @@ To combine work and play:
 She sells C shells by the seashore.
 
 8/9/5/6/8
+./../../
+../../../
+./../
+../../
+../.-/../
 
 
 A woman in liquor production
@@ -43,6 +63,11 @@ Through magnetic coils.
 She says that it's "proof by induction."  
 
 9/10/5/5/9
+./../../.
+../../../.
+./../
+./../
+./../../.
 
 
 There once was a [person] from [place]
@@ -52,6 +77,11 @@ It would cause [him or her]
 To violate [law of time/space].
 
 8/8/6/6/8
+./../../
+./../../
+../../
+../../
+./../../
 
 
 A preoccupied vegan named Hugh
@@ -61,6 +91,11 @@ before spitting, in fright,
 "OMG, WTF, BBQ!"
 
 9/8/5/6/9
+../../../
+./../../
+./../
+../../
+../../../
 
 
 There once was a buggy AI
@@ -71,6 +106,11 @@ That sadly the cake was a lie.
 
 8/9/7/6/8
 
+./../../
+../../../
+../../.
+./../.
+./../../
 
 
 

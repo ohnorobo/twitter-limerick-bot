@@ -16,6 +16,11 @@ def is_ascii(s):
 def contains_digit(string):
   return any(char.isdigit() for char in string)
 
+# turns a list if lists into a single list
+def flatten(l):
+  return [item for sublist in l for item in sublist]
+
+
 
 
 class StreamWatcherListener(tweepy.StreamListener):
@@ -60,6 +65,10 @@ class Database():
 
 class MeterReader():
 
+  # 0    — No stress
+  # 1    — Primary stress
+  # 2    — Secondary stress
+
   def __init__(self):
     self.dic = CMUDict()
 
@@ -73,11 +82,11 @@ class MeterReader():
       return False
 
     if 8 <= num <= 10:
-      if self.matchlong(text):
+      if self.matchlong(text, num):
         return "long"
 
     if 5 <= num <= 7:
-      if self.matchshort(text):
+      if self.matchshort(text, num):
         return "short"
 
     return False
@@ -87,16 +96,73 @@ class MeterReader():
     return sum(map(self.dic.sylls, text))
 
   # match the pattern 
-  # ˘ ˘ / ˘ ˘ / ˘ ˘ /
+  # + ˘ / ˘ ˘ / ˘ ˘ / +
   # where single-syll words match either way
-  def matchlong(self, text):
-    return True
+  # and +s are optional ˘
+  def matchlong(self, text, num_sylls):
+
+    stresses = self.stresses(text)
+    single_syll_words = self.single_syll_words(text)
+
+    # possible options
+    #  ./../../   8
+    #  ./../../.  9
+    # ../../../   9
+    # ../../../.  10
+
+    if num_sylls == 8:
+      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0])
+    else if num_sylls == 9:
+      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or
+             self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0])
+    else if num_sylls == 10:
+      return self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
+
+    #pprint(stresses)
+    #pprint(single_syll_words)
 
   # match the pattern 
-  # ˘ ˘ / ˘ ˘ /
+  # + ˘ / ˘ ˘ / +
   # where single sylls count either way
-  def matchshort(self, text):
-    return True
+  # and +s are optional ˘
+  def matchshort(self, text, num_sylls):
+
+    stresses = self.stresses(text)
+    single_syll_words = self.single_syll_words(text)
+
+    # possible options
+    #  ./../   5
+    #  ./../.  6
+    # ../../   6
+    # ../../.  7
+
+    if num_sylls == 5:
+      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0])
+    else if num_sylls == 6:
+      return self.match_pattern(stresses, single_sylls, [1, 0, 1, 1, 0, 1]) or
+             self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0])
+    else if num_sylls == 7:
+      return self.match_pattern(stresses, single_sylls, [1, 1, 0, 1, 1, 0, 1])
+
+    #pprint(stresses)
+    #pprint(single_syll_words)
+
+
+  #the stress corrosponding th each syllable
+  def stresses(self, text):
+    return flatten(map(self.dic.stresses, text))
+
+  # whether each syllable is a single word
+  def single_syll_words(self, text):
+    return flatten(map(self.dic.single_syll, text))
+
+
+  def match_pattern(self, stresses, single_sylls, pattern):
+    # stresses is a list of 0-1-2s
+    # single sylls is a list of true-falses
+    # patterns is a list of 0-1s
+
+
 
 
 class CMUDict():
@@ -147,6 +213,18 @@ class CMUDict():
 
   def rhyme(self, word):
     return self.dic[word.upper()][1]
+
+  # returns [True] if it's a single syll word
+  # returns [False False ...] for any multi-syll word
+  # number of falses matches number of sylls
+  def single_syll(self, word):
+    sylls = self.dic[word.upper()][2]
+
+    if sylls == 1:
+      return [True]
+    else:
+      return [False]*sylls
+
 
 
 

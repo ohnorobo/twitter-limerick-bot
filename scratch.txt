@@ -1,0 +1,29 @@
+
+DB
+
+twitter id     numeric
+rhyme          text
+tweet text     text
+short/long     enum
+
+
+psql \limerickdb  # this opens psql in the database limerickdb
+
+
+db entries
+
+
+
+\l
+\du
+\db
+
+CREATE TABLE limericks ( id integer PRIMARY KEY, tweet text, rhyme text, length boolean);
+select * FROM information_schema.columns WHERE table_schema='public' and table_name='limericks';
+
+ALTER TABLE limericks ALTER COLUMN tweet TYPE varchar(140);
+ALTER TABLE limericks ALTER COLUMN rhyme TYPE varchar(10);
+ALTER TABLE limericks ALTER COLUMN id TYPE bigint;
+SELECT * from limericks;
+DELETE from limericks;
+

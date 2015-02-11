@@ -18,12 +18,26 @@ db entries
 \du
 \db
 
-CREATE TABLE limericks ( id integer PRIMARY KEY, tweet text, rhyme text, length boolean);
-select * FROM information_schema.columns WHERE table_schema='public' and table_name='limericks';
 
-ALTER TABLE limericks ALTER COLUMN tweet TYPE varchar(140);
-ALTER TABLE limericks ALTER COLUMN rhyme TYPE varchar(10);
-ALTER TABLE limericks ALTER COLUMN id TYPE bigint;
-SELECT * from limericks;
-DELETE from limericks;
+# todo rename limericks table to lines
+
+CREATE TABLE lines ( id integer PRIMARY KEY, tweet text, rhyme text, length boolean);
+select * FROM information_schema.columns WHERE table_schema='public' and table_name='lines';
+
+ALTER table limericks RENAME TO lines;
+
+ALTER TABLE lines ALTER COLUMN tweet TYPE varchar(140);
+ALTER TABLE lines ALTER COLUMN rhyme TYPE varchar(10);
+ALTER TABLE lines ALTER COLUMN id TYPE bigint;
+SELECT * from lines;
+DELETE from lines;
+
+SELECT id FROM lines WHERE length=False AND rhyme='B-ER';
+
+
+CREATE TABLE pairs ( id_a bigint, id_b bigint, text_a varchar(140), text_b varchar(140), PRIMARY KEY (id_a, id_b) );
+CREATE TABLE triples ( id_a bigint, id_b bigint, id_c bigint, text_a varchar(140), text_b varchar(140), text_c varchar(140), PRIMARY KEY (id_a, id_b, id_c) );
+
+DROP TABLE pairs;
+DROP TABLE triples;
 

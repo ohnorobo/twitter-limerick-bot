@@ -38,6 +38,9 @@ SELECT id FROM lines WHERE length=False AND rhyme='B-ER';
 CREATE TABLE pairs ( id_a bigint, id_b bigint, text_a varchar(140), text_b varchar(140), PRIMARY KEY (id_a, id_b) );
 CREATE TABLE triples ( id_a bigint, id_b bigint, id_c bigint, text_a varchar(140), text_b varchar(140), text_c varchar(140), PRIMARY KEY (id_a, id_b, id_c) );
 
+DELETE FROM pairs;
+DELETE FROM triples;
+
 DROP TABLE pairs;
 DROP TABLE triples;
 

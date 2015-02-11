@@ -102,29 +102,36 @@ class Database():
   # moved short tweets from db to pair table if possible
   def potential_pair(self, rhyme):
     search = self.search(self.long_not_short("short"), rhyme)
-    ids = [x[0] for x in search]
-    texts = [x[1] for x in search]
+    ids, texts, final_words, wordset = self.get_elements(search)
 
-    # TODO can't be the same final word
-
-    if len(ids) == 2:
+    if len(wordset) == 2:
+      indexes = [final_words.index(word) for word in wordset]
       print(("IDS pair", ids, texts))
-      self.addpair(ids[0], ids[1], texts[0], texts[1])
+      self.addpair(ids[indexes[0]], ids[indexes[1]],
+                   texts[indexes[0]], texts[indexes[1]])
       for ida in ids:
         self.deletetweet(ida)
+
+
+  def get_elements(self, search):
+    ids = [x[0] for x in search]
+    texts = [x[1] for x in search]
+    final_words = [text.split(" ")[-1].upper() for text in texts]
+    wordset = list(set(final_words))
+
+    return ids, texts, final_words, wordset
 
 
   # moved long tweets from db to triple table if possible
   def potential_triple(self, rhyme):
     search = self.search(self.long_not_short("long"), rhyme)
-    ids = [x[0] for x in search]
-    texts = [x[1] for x in search]
+    ids, texts, final_words, wordset = self.get_elements(search)
 
-    # TODO can't be the same final word
-
-    if len(ids) == 3:
+    if len(wordset) == 3:
+      indexes = [final_words.index(word) for word in wordset]
       print(("IDS triple", ids, texts))
-      self.addtriple(ids[0], ids[1], ids[2], texts[0], texts[1], texts[2])
+      self.addtriple(ids[indexes[0]], ids[indexes[1]], ids[indexes[2]],
+                     texts[indexes[0]], texts[indexes[1]], texts[indexes[2]])
       for ida in ids:
         self.deletetweet(ida)
 

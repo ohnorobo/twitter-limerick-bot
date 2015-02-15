@@ -242,12 +242,12 @@ class MeterReader():
     # ../../../.  10
 
     if (num_sylls == 8):
-      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0,1,1,0])
+      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1,0,0,1])
     elif (num_sylls == 9):
-      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0,1,1,0,1]) or \
-             self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0,1,1,0])
+      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1,0,0,1,0]) or \
+             self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1,0,0,1])
     elif (num_sylls == 10):
-      return self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0,1,1,0,1])
+      return self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1,0,0,1,0])
 
   # match the pattern 
   # + ˘ / ˘ ˘ / +
@@ -268,12 +268,12 @@ class MeterReader():
     # ../../.  7
 
     if (num_sylls == 5):
-      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0])
+      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1])
     elif (num_sylls == 6):
-      return self.match_pattern(text, stresses, single_sylls, [1,0,1,1,0,1]) or \
-             self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0])
+      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1,0]) or \
+             self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1])
     elif (num_sylls == 7):
-      return self.match_pattern(text, stresses, single_sylls, [1,1,0,1,1,0,1])
+      return self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1,0])
 
   #the stress corrosponding th each syllable
   def stresses(self, text):
@@ -296,8 +296,8 @@ class MeterReader():
     for tex, stress, single_syll, patt in zip(text, stresses, single_sylls, pattern):
       if stress == patt:
         pass
-      elif stress == 2: # secondary stress can be either off or on
-        pass
+      #elif stress == 2: # secondary stress can be either off or on
+      #  pass
       elif single_syll == True:
         # TODO this is probably too permissive a condition
         # figure out something more restrained
@@ -305,7 +305,7 @@ class MeterReader():
         # http://xpo6.com/list-of-english-stop-words/
         is_stopword = tex.lower() in STOPWORDS
 
-        if (is_stopword and patt == 1) or (not is_stopword and patt == 0):
+        if (is_stopword and patt == 0) or (not is_stopword and patt in [1, 2]):
           pass
           # TODO use textblob to do pos tagging here?
         else:
@@ -330,6 +330,11 @@ class CMUDict():
   #   - stresses is a list of numbers, [1, 0, 0, 2, 1]
   #   - syllable sounds is a list of words, ['D', 'AW', 'N']
   #   - number of sylls is a number, 4
+
+  # Stresses are
+  # 0    — No stress
+  # 1    — Primary stress
+  # 2    — Secondary stress
 
   def __init__(self):
 

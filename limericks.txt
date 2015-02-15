@@ -1,8 +1,33 @@
 
+Word classes for our purposes:
+STP - stopwords
+DET - determiner
+ADJ - adjective
+VRB - verb
+NOU - noun
+ADV - adverb
+PRO - pronoun
+PRP - preposition
+CNJ - conjunction
+WHW - wh words
+CTR - contraction
+
+
+thoughts in POS and long lines
+most of these start with an explicitly weak word, a/there/if/ etc
+starting with a noun or a verb is probably no good
+
+
+
+       /            /           /
 There was a young sailor from Brighton,
+     /           /               /
 Who said to his girl, "You're a tight one."
+        /              /
 She replied, "Bless my soul,
+       /             /
 You're in the wrong hole;
+          /        /           /
 There's plenty of room in the right one."
 
 9/9/6/5/9
@@ -11,6 +36,13 @@ There's plenty of room in the right one."
 ../../
 ./../
 ./../../.
+
+STP VRB DET ADJ NOU-NOU PRP NOU-NOU
+WHW VRB PRP ADJ NOU CTR DET ADJ NOU
+PRO VRB-VRB VRB ADJ NOU
+CTR PRP DET ADJ NOU
+STP ADJ-ADJ PRO NOU PRO DET ADJ NOU
+
 
 
 
@@ -27,11 +59,23 @@ A Chilean chinchilla's chin chilly
 ./../
 ../../../.
 
+STP PRO VRB DET NOU-NOU-NOU PRP NOU-NOU
+CNJ VRB PRP ADJ NOU ADJ-ADJ ADJ-ADJ
+PRO STP ADJ-ADJ-ADJ VRB
+STP PRO VRB ADV VRB
+DET ADJ-ADJ-ADJ NOU-NOU-NOU NOU ADJ-ADJ
 
+
+
+.  /  .  .   / . .   /
 A dying mosquito exclaimed,
+ .  /   .   .   /   .   .    /
 "A chemist has poisoned my brain!"
+  .   /   .   .   /   .
 The cause of his sorrow
+ .   / .  .   / .
 Was para-dichloro-
+ .  / .    .   / . .  /
 Diphenyl-trichloroethane
 
 8/8/6/6/8
@@ -41,7 +85,15 @@ Diphenyl-trichloroethane
 ./../.
 ./../../
 
+DET ADJ-ADJ NOU-NOU-NOU VRB-VRB
+DET NOU-NOU VRB VRB-VRB ADJ NOU
+DET NOU PRP ADJ NOU-NOU
+VRB NOU-NOU NOU-NOU-NOU
+NOU-NOU-NOU NOU-NOU-NOU NOU-NOU
 
+
+
+.  /.    .    / .   .  /
 A UNIX sales lady, Lenore,
 Enjoys work, but she likes the beach more.
 She found a good way
@@ -54,6 +106,13 @@ She sells C shells by the seashore.
 ./../
 ../../
 ../.-/../
+
+det nou-nou nou nou-nou nou-nou
+vrb-vrb nou cnj adj vrb det nou adj
+pro vrb det adj nou
+prp vrb-vrb nou cjn nou
+pro vrb nou nou prp det nou-nou
+
 
 
 A woman in liquor production
@@ -69,6 +128,12 @@ She says that it's "proof by induction."
 ./../
 ./../../.
 
+det nou-nou prp nou-nou nou-nou-nou
+vrb det nou prp adj-adj-adj nou-nou-nou
+det nou-nou-nou vrb
+prp adj-adj-adj nou
+pro vrb stp ctr nou prp nou-nou-nou
+
 
 There once was a [person] from [place]
 Whose [body part] was [special case].
@@ -82,6 +147,10 @@ To violate [law of time/space].
 ../../
 ../../
 ./../../
+
+
+
+
 
 
 A preoccupied vegan named Hugh

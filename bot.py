@@ -1,4 +1,5 @@
 #!/usr/local/bin/python3
+# -*- coding: utf-8 -*-
 
 import os, time, sys
 import tweepy
@@ -8,6 +9,9 @@ from keys import *
 
 
 VOWELS = ['A', 'E', 'I', 'O', 'U'] # vowels parts in the CMU phone schema
+
+
+
 
 
 def log_error(msg):
@@ -30,6 +34,7 @@ def flatten(l):
 class StreamWatcherListener(tweepy.StreamListener):
   def on_status(self, status):
     # potentially add to db
+    # pprint(status.text)
     db.potential_add(status)
 
 
@@ -47,14 +52,15 @@ class StreamWatcherListener(tweepy.StreamListener):
     pass
 
   # given 5 tweet ids that form a tweet
-  def tweet(self, ids):
-    for ida in ids:
-      #tweepy.retweet(ida)
-      print(ida)
+  def tweet(self, long_ids, short_ids):
+    tweepy.retweet(long_ids[0])
+    tweepy.retweet(long_ids[1])
+    tweepy.retweet(short_ids[0])
+    tweepy.retweet(short_ids[1])
+    tweepy.retweet(long_ids[2])
 
-    a, b, x, y, c = ids
-    db.deletepair(x, y)
-    db.deletetriple(a, b, c)
+    db.deletepair(long_ids[0], long_ids[1])
+    db.deletetriple(long_ids[0], long_ids[1], long_ids[2])
 
 
 
@@ -112,7 +118,12 @@ class Database():
       for ida in ids:
         self.deletetweet(ida)
 
-
+  # given a db search returns
+  #  - list of ids
+  #  - list of texts
+  #  - list of final words in thos texts
+  #  - set (uniq) of final words in those texts
+  #  TODO move indexing into this method
   def get_elements(self, search):
     ids = [x[0] for x in search]
     texts = [x[1] for x in search]
@@ -178,12 +189,10 @@ class MeterReader():
       if any(vowel in syll for vowel in VOWELS):
         break
 
-    # TODO, this includes the consonant before the last vowel
-    # is that really what we want?
-    # maybe it should just be core+ryme
-    # or head+core if there's no ryme
-    # tho -> DH-OW
-    # family -> L-IY
+    # this is the ryme of the last syllable
+    # family -> y
+    # cats -> ats
+    # boo -> oo
     rhyme_sylls = final_sylls[-1*(i+1):]
     st = "-".join(rhyme_sylls)
     print(st)
@@ -281,6 +290,9 @@ class MeterReader():
     # patterns is a list of 0-1s
     # all lists must be the same length
 
+    if all(single_sylls):
+      return False   #must be at least one multi-syllable word
+
     for tex, stress, single_syll, patt in zip(text, stresses, single_sylls, pattern):
       if stress == patt:
         pass
@@ -291,16 +303,13 @@ class MeterReader():
         # figure out something more restrained
         # maybe don't allow stress on single-syll stop words
         # http://xpo6.com/list-of-english-stop-words/
-        if tex.lower() in STOPWORDS:
-          if patt == 1:
-            pass
-          else:
-            return False
+        is_stopword = tex.lower() in STOPWORDS
+
+        if (is_stopword and patt == 1) or (not is_stopword and patt == 0):
+          pass
+          # TODO use textblob to do pos tagging here?
         else:
-          if patt == 0:
-            pass
-          else:
-            return False
+          return False
 
       else:
         return False
@@ -311,7 +320,7 @@ class MeterReader():
 STOPWORDS = ["a", "the", "for", "am", "an", "are", "as", "at", "be", "but",
              "he", "her", "i", "if", "in", "is", "it", "it's", "my", "of", "on",
              "or", "and", "our", "his", "her", "out", "so", "such", "than", "these",
-             "this", "that", "those", "to", "too"]
+             "this", "that", "those", "there", "to", "too"]
 
 
 class CMUDict():
@@ -397,20 +406,61 @@ class CMUDict():
 
 
 
+import unittest
+class TestMeter(unittest.TestCase):
+
+  def TestMatchLong(self):
+    mr = MeterReader()
+                                 #   .        /    .      .       /   .     .       /    .
+    self.assertTrue(mr.matchlong(["There", "was", "a", "young", "sailor", "from", "Brighton"], 9))
+                                 #   .     /      .      .      /        .       .      /       .
+    self.assertTrue(mr.matchlong(["Who", "said", "to", "his", "girl", "you're", "a", "tight", "one"], 9))
+
+                                  # .      /   .     .    .     /      .   /   .      /
+    self.assertFalse(mr.matchlong(["A", "blender", "is", "a", "good", "investment", "right"], 10))
 
 
-#main
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-db = Database()
+  def TestMatchShort(self):
+    mr = MeterReader()
+                                  #   .     .   /       .       .      /
+    self.assertTrue(mr.matchshort(["She", "replied", "bless", "my", "soul"], 6))
+                                  #   .        /    .        .        /
+    self.assertTrue(mr.matchshort(["You're", "in", "the", "wrong", "hole"], 5))
 
-listener = StreamWatcherListener()
-stream = tweepy.Stream(auth, listener)
 
-# stream.filter(languages=["en"])
-# this doesn't seem to work at the moment
-# https://github.com/tweepy/tweepy/issues/291
+  def TestMatchSingleSylls(self):
+                                  #    .     /      /     .      .      /
+    self.assertFalse(mr.matchshort(["The", "cat", "sat", "on", "the", "mat"], 6))
 
-stream.sample()
+
+
+
+
+
+if __name__ == "__main__":
+
+  #main
+  auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+  auth.set_access_token(access_token, access_token_secret)
+  db = Database()
+
+  listener = StreamWatcherListener()
+  stream = tweepy.Stream(auth, listener, timeout=35)
+
+  #stream.filter(languages=["en"])
+  # this doesn't seem to work at the moment
+  # https://github.com/tweepy/tweepy/issues/291
+
+  #stream.filter(languages=["en"], track=["cat"])
+
+  while True:
+    try:
+      print("trying to sample")
+      stream.sample()
+      #stream.filter(track=["twitter"])
+    except Exception as e:
+      pprint(e)
+      pprint("Restarting")
+      continue
 
 

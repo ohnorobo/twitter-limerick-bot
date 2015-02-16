@@ -290,8 +290,8 @@ class MeterReader():
     # patterns is a list of 0-1s
     # all lists must be the same length
 
-    if all(single_sylls):
-      return False   #must be at least one multi-syllable word
+    #if all(single_sylls):
+    #  return False   #must be at least one multi-syllable word
 
     for tex, stress, single_syll, patt in zip(text, stresses, single_sylls, pattern):
       if stress == patt:
@@ -299,12 +299,9 @@ class MeterReader():
       #elif stress == 2: # secondary stress can be either off or on
       #  pass
       elif single_syll == True:
-        # TODO this is probably too permissive a condition
-        # figure out something more restrained
-        # maybe don't allow stress on single-syll stop words
-        # http://xpo6.com/list-of-english-stop-words/
         is_stopword = tex.lower() in STOPWORDS
 
+        #     stopwords and no stress        non-stopwords and stress
         if (is_stopword and patt == 0) or (not is_stopword and patt in [1, 2]):
           pass
           # TODO use textblob to do pos tagging here?
@@ -317,8 +314,12 @@ class MeterReader():
     print(pattern)
     return True
 
+# TODO this is probably too permissive a condition
+# figure out something more restrained
+# maybe don't allow stress on single-syll stop words
+# http://xpo6.com/list-of-english-stop-words/
 STOPWORDS = ["a", "the", "for", "am", "an", "are", "as", "at", "be", "but",
-             "he", "her", "i", "if", "in", "is", "it", "it's", "my", "of", "on",
+             "he", "her", "i", "is", "if", "in", "is", "it", "it's", "my", "of", "on",
              "or", "and", "our", "his", "her", "out", "so", "such", "than", "these",
              "this", "that", "those", "there", "to", "too"]
 
@@ -464,7 +465,7 @@ if __name__ == "__main__":
       stream.sample()
       #stream.filter(track=["twitter"])
     except Exception as e:
-      pprint(e)
+      #pprint(e)
       pprint("Restarting")
       continue
 

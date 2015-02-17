@@ -1,15 +1,23 @@
 #!/usr/local/bin/python3
 # -*- coding: utf-8 -*-
 
-import os, time, sys
+import os, time, sys, re, traceback
 import tweepy
 import postgresql
 from pprint import pprint
-from keys import *
+from keys import *  #this is another python file that defines your twitter/db credentials
+from offensive import offensive
 
 
 VOWELS = ['A', 'E', 'I', 'O', 'U'] # vowels parts in the CMU phone schema
 
+# http://www.noswearing.com/
+BLACKLIST = ["arse", "ass", "asshole", "bastard", "bitch", "bloody", "bollocks", "boner",
+             "chode", "choad", "clusterfuck", "cock", "cooch", "cooter", "cunt", "cum",
+             "damn", "dick", "douche", "dumbass", "dumbfuck", "fuck", "fuckface", "fucking",
+             "fuckup", "goddamn", "goddamnit", "hell", "jackass", "motherfucker", "motherfucking",
+             "piss", "pissed", "poon", "prick", "pussy", "queef", "schlong", "shit", "smeg",
+             "smegma", "splooge", "tit", "tits", "twat", "vag", "wank"]
 
 
 
@@ -42,6 +50,11 @@ class StreamWatcherListener(tweepy.StreamListener):
     log_error("Status code: %s." % status_code)
     time.sleep(3)
     return True  # keep stream alive
+
+  def on_exception(self, exception):
+    pprint(exception)
+    time.sleep(3)
+    return True
 
   def on_timeout(self):
     log_error("Timeout.")
@@ -89,10 +102,12 @@ class Database():
   def potential_add(self, tweet):
 
     if self.validate(tweet):
+      #pprint(tweet.text)
       # Valid is one of "long", "short", or False
       valid = self.mr.valid_meter(tweet.text)
 
       if (valid):
+        pprint("VALID PATTERN")
         pprint(tweet.text)
         pprint(tweet.id)
         pprint(valid)
@@ -161,11 +176,14 @@ class Database():
 
   # meets some strict list of criteria for inclusion
   # ascii only
-  # english only
   # no retweets
   # no included links
+  # nothing really terrible
   def validate(self, tweet):
-    return is_ascii(tweet.text) and tweet.lang == "en"
+    return is_ascii(tweet.text) and self.tact(tweet.text)
+
+  def tact(self, text):
+    return re.search(offensive, text) is None
 
 
 
@@ -445,7 +463,6 @@ class TestMeter(unittest.TestCase):
 
 if __name__ == "__main__":
 
-  #main
   auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
   auth.set_access_token(access_token, access_token_secret)
   db = Database()
@@ -453,20 +470,15 @@ if __name__ == "__main__":
   listener = StreamWatcherListener()
   stream = tweepy.Stream(auth, listener, timeout=35)
 
-  #stream.filter(languages=["en"])
-  # this doesn't seem to work at the moment
-  # https://github.com/tweepy/tweepy/issues/291
-
-  #stream.filter(languages=["en"], track=["cat"])
-
   while True:
     try:
       print("trying to sample")
-      stream.sample()
-      #stream.filter(track=["twitter"])
+      #stream.sample()
+      stream.filter(track=BLACKLIST, languages=["en"])
     except Exception as e:
       #pprint(e)
       pprint("Restarting")
+      time.sleep(5)
       continue
 
 

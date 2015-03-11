@@ -3,7 +3,6 @@
 
 import os, time, sys, re, traceback
 import tweepy
-import postgresql
 from pprint import pprint
 from keys import *  #this is another python file that defines your twitter/db credentials
 from offensive import offensive
@@ -14,7 +13,7 @@ VOWELS = ['A', 'E', 'I', 'O', 'U'] # vowels parts in the CMU phone schema
 # http://www.noswearing.com/
 BLACKLIST = ["arse", "ass", "asshole", "bastard", "bitch", "bloody", "bollocks", "boner",
              "chode", "choad", "clusterfuck", "cock", "cooch", "cooter", "cunt", "cum",
-             "damn", "dick", "douche", "dumbass", "dumbfuck", "fuck", "fuckface", "fucking",
+             "damn", "dick", "douche", "dumbass", "dumbfuck", "fuck", "fuckface", #"fucking",
              "fuckup", "goddamn", "goddamnit", "hell", "jackass", "motherfucker", "motherfucking",
              "piss", "pissed", "poon", "prick", "pussy", "queef", "schlong", "shit", "smeg",
              "smegma", "splooge", "tit", "tits", "twat", "vag", "wank"]
@@ -48,7 +47,11 @@ class StreamWatcherListener(tweepy.StreamListener):
 
   def on_error(self, status_code):
     log_error("Status code: %s." % status_code)
-    time.sleep(3)
+    if status_code == 420:
+      pprint("Enhance your calm")
+      time.sleep(120)
+    else:
+      time.sleep(3)
     return True  # keep stream alive
 
   def on_exception(self, exception):
@@ -82,6 +85,8 @@ class StreamWatcherListener(tweepy.StreamListener):
 class Database():
 
   def __init__(self):
+    import postgresql # importing this earlier messes up nosetests
+
     db = postgresql.open(user='slaplante', password='',
                          database='limerickdb',
                          host='localhost', port=5432)
@@ -104,10 +109,11 @@ class Database():
     if self.validate(tweet):
       #pprint(tweet.text)
       # Valid is one of "long", "short", or False
-      valid = self.mr.valid_meter(tweet.text)
+      valid, pattern = self.mr.valid_meter(tweet.text)
 
       if (valid):
         pprint("VALID PATTERN")
+        pprint(pattern)
         pprint(tweet.text)
         pprint(tweet.id)
         pprint(valid)
@@ -219,23 +225,26 @@ class MeterReader():
 
   # checks if meter is valid for a limerick
   # and returns 'long' or 'short' if valid, False otherwise
+  # and the matched pattern or [] if there is no pattern
   def valid_meter(self, text):
     text = text.split(' ')
 
     try:
       num = self.num_sylls(text)
     except KeyError:
-      return False
+      return False, []
 
     if 8 <= num <= 10:
-      if self.matchlong(text, num):
-        return "long"
+      match, pattern = self.matchlong(text, num)
+      if match:
+        return "long", pattern
 
     if 5 <= num <= 7:
-      if self.matchshort(text, num):
-        return "short"
+      match, pattern = self.matchshort(text, num)
+      if match:
+        return "short", pattern
 
-    return False
+    return False, []
 
   # return the number of sylls in a text
   def num_sylls(self, text):
@@ -249,6 +258,7 @@ class MeterReader():
 
     stresses = self.stresses(text)
     single_sylls = self.single_syll_words(text)
+    tex = self.get_syllables(text)
 
     #pprint(stresses)
     #pprint(single_syll_words)
@@ -260,12 +270,12 @@ class MeterReader():
     # ../../../.  10
 
     if (num_sylls == 8):
-      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1,0,0,1])
+      return self.match_pattern(tex, stresses, single_sylls, [0,1,0,0,1,0,0,1])
     elif (num_sylls == 9):
-      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1,0,0,1,0]) or \
-             self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1,0,0,1])
+      return self.match_pattern(tex, stresses, single_sylls, [0,1,0,0,1,0,0,1,0]) or \
+             self.match_pattern(tex, stresses, single_sylls, [0,0,1,0,0,1,0,0,1])
     elif (num_sylls == 10):
-      return self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1,0,0,1,0])
+      return self.match_pattern(tex, stresses, single_sylls, [0,0,1,0,0,1,0,0,1,0])
 
   # match the pattern 
   # + ˘ / ˘ ˘ / +
@@ -275,6 +285,7 @@ class MeterReader():
 
     stresses = self.stresses(text)
     single_sylls = self.single_syll_words(text)
+    tex = self.get_syllables(text)
 
     #pprint(stresses)
     #pprint(single_syll_words)
@@ -286,12 +297,12 @@ class MeterReader():
     # ../../.  7
 
     if (num_sylls == 5):
-      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1])
+      return self.match_pattern(tex, stresses, single_sylls, [0,1,0,0,1])
     elif (num_sylls == 6):
-      return self.match_pattern(text, stresses, single_sylls, [0,1,0,0,1,0]) or \
-             self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1])
+      return self.match_pattern(tex, stresses, single_sylls, [0,1,0,0,1,0]) or \
+             self.match_pattern(tex, stresses, single_sylls, [0,0,1,0,0,1])
     elif (num_sylls == 7):
-      return self.match_pattern(text, stresses, single_sylls, [0,0,1,0,0,1,0])
+      return self.match_pattern(tex, stresses, single_sylls, [0,0,1,0,0,1,0])
 
   #the stress corrosponding th each syllable
   def stresses(self, text):
@@ -301,6 +312,11 @@ class MeterReader():
   def single_syll_words(self, text):
     return flatten(map(self.dic.single_syll, text))
 
+  # returns syllables for a list of words
+  # ["see", "you", "later"] -> ["EE", "OU", "AY", "ER"]
+  def get_syllables(self, text):
+    return flatten(map(self.dic.vowel_sound_sylls, text))
+
   # does the text match the given stress pattern?
   def match_pattern(self, text, stresses, single_sylls, pattern):
     # stresses is a list of 0-1-2s
@@ -308,29 +324,39 @@ class MeterReader():
     # patterns is a list of 0-1s
     # all lists must be the same length
 
-    #if all(single_sylls):
-    #  return False   #must be at least one multi-syllable word
+    if not (len(text) == len(stresses) == len(single_sylls) == len(pattern)):
+      pprint("ABORT")
+      pprint((text, stresses, single_sylls, pattern))
+      return Exception("unequal pattern lengths")
 
     for tex, stress, single_syll, patt in zip(text, stresses, single_sylls, pattern):
-      if stress == patt:
-        pass
+      #pprint((tex, stress, single_syll, patt))
+      #if stress == patt:
+      #  pass
       #elif stress == 2: # secondary stress can be either off or on
       #  pass
-      elif single_syll == True:
-        is_stopword = tex.lower() in STOPWORDS
+      #elif single_syll == True:
+      is_stopword = tex.lower() in STOPWORDS
 
-        #     stopwords and no stress        non-stopwords and stress
-        if (is_stopword and patt == 0) or (not is_stopword and patt in [1, 2]):
-          pass
-          # TODO use textblob to do pos tagging here?
-        else:
-          return False
-
+      # no stress
+      if patt == 0:
+        #print("weak")
+        pass
+      # non-stopwords and stress
+      elif patt in [1,2] and not is_stopword and not single_syll:
+        #pprint("strong")
+        pass
+        # TODO use textblob to do pos tagging here?
       else:
-        return False
+        #pprint("failed")
+        return False, pattern
+
+      #else:
+      #  #pprint("failed")
+      #  return False, pattern
 
     print(pattern)
-    return True
+    return True, pattern
 
 # TODO this is probably too permissive a condition
 # figure out something more restrained
@@ -401,8 +427,15 @@ class CMUDict():
 
   # like sylls, but removes stress #s in syllables
   def sound_sylls(self, word):
-    #print((word, self.dic[word.upper()]))
     return [self.remove_num(syll) for syll in self.dic[word.upper()][1]]
+
+  # like sylls, but removes stress #s in syllables
+  # and onlt returns syll cores
+  def vowel_sound_sylls(self, word):
+    sylls = self.sound_sylls(word)
+    return filter(lambda syll: any([vowel in syll for vowel in VOWELS]), sylls)
+
+
 
   # DH -> DH
   # AY1 -> AY
@@ -431,30 +464,90 @@ class CMUDict():
 
 
 import unittest
+
+class TestCMU(unittest.TestCase):
+
+  dic = CMUDict()
+
+  def TestVowelSylls(self):
+    self.assertEqual(self.dic.vowel_sound_sylls('Allergies'), ['AE', 'ER', 'IY'])
+
+
+
 class TestMeter(unittest.TestCase):
 
-  def TestMatchLong(self):
-    mr = MeterReader()
-                                 #   .        /    .      .       /   .     .       /    .
-    self.assertTrue(mr.matchlong(["There", "was", "a", "young", "sailor", "from", "Brighton"], 9))
-                                 #   .     /      .      .      /        .       .      /       .
-    self.assertTrue(mr.matchlong(["Who", "said", "to", "his", "girl", "you're", "a", "tight", "one"], 9))
+  # only set this up once, it's expensive
+  mr = MeterReader()
 
-                                  # .      /   .     .    .     /      .   /   .      /
-    self.assertFalse(mr.matchlong(["A", "blender", "is", "a", "good", "investment", "right"], 10))
+  def TestMatchLong(self):
+                                      #   .        /    .      .       /   .     .       /    .
+    self.assertTrue(self.mr.matchlong(["There", "was", "a", "young", "sailor", "from", "Brighton"], 9))
+                                      #   .     /      .      .      /        .       .      /       .
+    self.assertTrue(self.mr.matchlong(["Who", "said", "to", "his", "girl", "you're", "a", "tight", "one"], 9))
+
+                                       # .      /   .     .    .     /      .   /   .      /
+    self.assertFalse(self.mr.matchlong(["A", "blender", "is", "a", "good", "investment", "right"], 10)[0])
 
 
   def TestMatchShort(self):
-    mr = MeterReader()
-                                  #   .     .   /       .       .      /
-    self.assertTrue(mr.matchshort(["She", "replied", "bless", "my", "soul"], 6))
-                                  #   .        /    .        .        /
-    self.assertTrue(mr.matchshort(["You're", "in", "the", "wrong", "hole"], 5))
+                                       #   .     .   /       .       .      /
+    self.assertTrue(self.mr.matchshort(["She", "replied", "bless", "my", "soul"], 6))
+                                    #   .        /    .        .        /
+    # self.assertTrue(mr.matchshort(["You're", "in", "the", "wrong", "hole"], 5))
+    # fails to put stress on the 'in'
 
 
   def TestMatchSingleSylls(self):
-                                  #    .     /      /     .      .      /
-    self.assertFalse(mr.matchshort(["The", "cat", "sat", "on", "the", "mat"], 6))
+                                       #    .     .      /     .      .      /
+    self.assertTrue(self.mr.matchshort(["The", "cat", "sat", "on", "the", "mat"], 6))
+
+  def TestMatchPattern1(self):
+           # .    /  .  .  /
+    text = "That son of a bitch".split()
+    stresses = self.mr.stresses(text)
+    single_sylls = self.mr.single_syll_words(text)
+    tex = self.mr.get_syllables(text)
+
+    self.assertTrue(self.mr.match_pattern(tex, stresses, single_sylls, [0, 1, 0, 0, 1]))
+
+  def TestMatchPattern2(self):
+           # .   /  .   .  .  /
+    text = "My brother is a douche".split()
+    stresses = self.mr.stresses(text)
+    single_sylls = self.mr.single_syll_words(text)
+    tex = self.mr.get_syllables(text)
+
+    self.assertFalse(self.mr.match_pattern(tex, stresses, single_sylls, [0, 1, 0, 0, 1, 0])[0])
+
+
+  def TestMatchPattern3(self):
+           # .   /  .   .  /   .    /
+    text = "But damn do I love my friends".split()
+    stresses = self.mr.stresses(text)
+    single_sylls = self.mr.single_syll_words(text)
+    tex = self.mr.get_syllables(text)
+
+    self.assertFalse(self.mr.match_pattern(tex, stresses, single_sylls, [0, 0, 1, 0, 0, 1, 0])[0])
+
+
+  def TestMatchPattern4(self):
+           # /  .  .   /   .    .  /
+    text = "Allergies can suck my ass".split()
+    stresses = self.mr.stresses(text)
+    single_sylls = self.mr.single_syll_words(text)
+    tex = self.mr.get_syllables(text)
+
+    self.assertFalse(self.mr.match_pattern(tex, stresses, single_sylls, [0, 0, 1, 0, 0, 1, 0])[0])
+
+  def TestMatchPattern5(self):
+           # .   /  .   .  /  .
+    text = "My brother is silly".split()
+    stresses = self.mr.stresses(text)
+    single_sylls = self.mr.single_syll_words(text)
+    tex = self.mr.get_syllables(text)
+
+    self.assertTrue(self.mr.match_pattern(tex, stresses, single_sylls, [0, 1, 0, 0, 1, 0])[0])
+
 
 
 

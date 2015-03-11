@@ -1,4 +1,6 @@
 
+
+
 DB
 
 twitter id     numeric
@@ -6,7 +8,7 @@ rhyme          text
 tweet text     text
 short/long     enum
 
-
+postgres -D /usr/local/var/postgres
 psql \limerickdb  # this opens psql in the database limerickdb
 
 
@@ -44,3 +46,9 @@ DELETE FROM triples;
 DROP TABLE pairs;
 DROP TABLE triples;
 
+
+
+
+add some missing obcenities fo cmu list
+
+http://www.brownielocks.com/Limericks.html
